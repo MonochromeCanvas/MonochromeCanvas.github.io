@@ -1,0 +1,183 @@
+(function () {
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
+  const communityCanvas = window.communityCanvas;
+
+  const elements = {
+    form: document.getElementById("submissionForm"),
+    fileInput: document.getElementById("artworkFile"),
+    emailInput: document.getElementById("emailInput"),
+    consentInput: document.getElementById("consentInput"),
+    previewImage: document.getElementById("previewImage"),
+    previewText: document.getElementById("previewText"),
+    formStatus: document.getElementById("formStatus"),
+    submitButton: document.getElementById("submitButton"),
+    nicknameInput: document.getElementById("nicknameInput")
+  };
+
+  bindEvents();
+  updateConfiguredState();
+
+  function bindEvents() {
+    elements.fileInput.addEventListener("change", handleFileChange);
+    elements.form.addEventListener("submit", handleSubmit);
+  }
+
+  function updateConfiguredState() {
+    if (communityCanvas && communityCanvas.isConfigured()) {
+      return;
+    }
+
+    elements.submitButton.disabled = true;
+    setStatus("The submission inbox is being connected. Please check back soon.", "error");
+  }
+
+  function handleFileChange() {
+    const file = elements.fileInput.files && elements.fileInput.files[0];
+
+    if (!file) {
+      updatePreview("", "Your uploaded image preview will appear here.");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      elements.fileInput.value = "";
+      updatePreview("", "Please choose a JPG, PNG, or WebP image.");
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      elements.fileInput.value = "";
+      updatePreview("", "Please choose an image under 10 MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      updatePreview(String(reader.result || ""), file.name + " selected.");
+    });
+    reader.readAsDataURL(file);
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+
+    if (elements.nicknameInput && elements.nicknameInput.value) {
+      setStatus("Thank you. Your submission has been received for review.", "success");
+      elements.form.reset();
+      updatePreview("", "Your uploaded image preview will appear here.");
+      return;
+    }
+
+    const supabase = communityCanvas && communityCanvas.getClient();
+
+    if (!supabase) {
+      setStatus("The submission inbox is being connected. Please check back soon.", "error");
+      return;
+    }
+
+    const file = elements.fileInput.files && elements.fileInput.files[0];
+
+    if (!file) {
+      setStatus("Please upload a photo of the artwork.", "error");
+      elements.fileInput.focus();
+      return;
+    }
+
+    if (!elements.emailInput.validity.valid) {
+      setStatus("Please enter a valid email address.", "error");
+      elements.emailInput.focus();
+      return;
+    }
+
+    if (!elements.consentInput.checked) {
+      setStatus("Please confirm the permission and credit statement before submitting.", "error");
+      elements.consentInput.focus();
+      return;
+    }
+
+    setBusy(true);
+    setStatus("Uploading your artwork for studio review...", "");
+
+    try {
+      const submissionId = crypto.randomUUID();
+      const extension = communityCanvas.getFileExtension(file);
+      const imagePath = "pending/" + submissionId + "." + extension;
+
+      const uploadResult = await supabase.storage
+        .from(communityCanvas.getBucketName())
+        .upload(imagePath, file, {
+          cacheControl: "3600",
+          contentType: file.type,
+          upsert: false
+        });
+
+      if (uploadResult.error) {
+        throw uploadResult.error;
+      }
+
+      const payload = buildSubmissionPayload(submissionId, imagePath, file);
+      const insertResult = await supabase.from("community_canvas_submissions").insert(payload);
+
+      if (insertResult.error) {
+        throw insertResult.error;
+      }
+
+      elements.form.reset();
+      updatePreview("", "Your uploaded image preview will appear here.");
+      setStatus("Thank you. Your artwork has been sent to Monochrome Canvas for review.", "success");
+    } catch (error) {
+      console.error(error);
+      setStatus("Something did not go through. Please try again, or email studio@monochromecanvas.com.", "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function buildSubmissionPayload(submissionId, imagePath, file) {
+    const formData = new FormData(elements.form);
+    const title = cleanText(formData.get("title")) || "Untitled";
+
+    return {
+      id: submissionId,
+      status: "pending",
+      featured: false,
+      title,
+      artist_email: cleanText(formData.get("email")).toLowerCase(),
+      credit_mode: formData.get("creditMode") === "public" ? "public" : "anonymous",
+      artist_name: cleanText(formData.get("artistName")),
+      social: cleanText(formData.get("social")),
+      website: cleanText(formData.get("website")),
+      location: cleanText(formData.get("location")),
+      artwork_note: cleanText(formData.get("artworkNote")),
+      endorsement: cleanText(formData.get("endorsement")),
+      image_path: imagePath,
+      image_mime_type: file.type,
+      image_size: file.size,
+      permission_confirmed: elements.consentInput.checked,
+      source_url: window.location.href,
+      user_agent: navigator.userAgent
+    };
+  }
+
+  function updatePreview(imageUrl, message) {
+    elements.previewImage.style.backgroundImage = imageUrl ? 'url("' + imageUrl.replace(/"/g, "%22") + '")' : "";
+    elements.previewText.textContent = message;
+  }
+
+  function setStatus(message, tone) {
+    elements.formStatus.textContent = message;
+    elements.formStatus.classList.toggle("is-error", tone === "error");
+    elements.formStatus.classList.toggle("is-success", tone === "success");
+  }
+
+  function setBusy(isBusy) {
+    elements.submitButton.disabled = isBusy;
+    elements.submitButton.textContent = isBusy ? "Sending..." : "Submit for review";
+  }
+
+  function cleanText(value) {
+    return communityCanvas && communityCanvas.cleanText
+      ? communityCanvas.cleanText(value)
+      : String(value || "").replace(/\s+/g, " ").trim();
+  }
+})();
