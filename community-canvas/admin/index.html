@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio Review | Recycled Studio Paper Gallery</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" href="../style.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="https://monochromecanvas.com" target="_blank" rel="noreferrer">Monochrome Canvas</a>
+      <nav class="site-nav" aria-label="Admin navigation">
+        <a href="../">Gallery</a>
+        <a href="../submit/">Submit</a>
+        <a class="is-active" href="./">Studio Review</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero hero-page" aria-labelledby="admin-title">
+        <div class="hero-context">
+          <p class="eyebrow">Private Studio Review</p>
+          <p>Review submitted artwork before it appears in the public gallery.</p>
+        </div>
+        <div class="hero-title">
+          <h1 id="admin-title">Submission inbox</h1>
+          <p class="lede">
+            Sign in with your approved studio email to approve, deny, feature, and edit gallery
+            submissions.
+          </p>
+        </div>
+      </section>
+
+      <section id="setupPanel" class="admin-panel" hidden>
+        <p class="eyebrow">Setup Needed</p>
+        <h2>Connect Supabase first</h2>
+        <p>
+          Add your Supabase project URL and anon key to <code>config.js</code>, then install the SQL
+          setup file in Supabase.
+        </p>
+      </section>
+
+      <section id="loginPanel" class="admin-panel" hidden>
+        <p class="eyebrow">Studio Login</p>
+        <h2>Send a sign-in link</h2>
+        <form id="loginForm" class="admin-login-form">
+          <label class="field">
+            <span>Studio email</span>
+            <input id="adminEmailInput" type="email" autocomplete="email" placeholder="studio@monochromecanvas.com" required>
+          </label>
+          <button class="button" type="submit">Send sign-in link</button>
+        </form>
+        <p id="loginStatus" class="form-status" aria-live="polite"></p>
+      </section>
+
+      <section id="reviewPanel" class="admin-review" hidden>
+        <div class="admin-toolbar">
+          <div>
+            <p class="eyebrow">Review Queue</p>
+            <h2 id="reviewTitle">Pending submissions</h2>
+          </div>
+          <div class="admin-actions">
+            <label class="select-field" for="statusFilter">
+              <span>Status</span>
+              <select id="statusFilter">
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="denied">Denied</option>
+                <option value="all">All</option>
+              </select>
+            </label>
+            <button id="refreshButton" class="button ghost-button" type="button">Refresh</button>
+            <button id="signOutButton" class="button ghost-button" type="button">Sign out</button>
+          </div>
+        </div>
+
+        <p id="adminStatus" class="form-status" aria-live="polite"></p>
+        <div id="submissionList" class="submission-list"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Private review dashboard</p>
+      <a href="../">Public gallery</a>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config.js"></script>
+    <script src="../supabase-client.js"></script>
+    <script src="./admin.js"></script>
+  </body>
+</html>
