@@ -161,6 +161,8 @@
     addMeta(meta, "Status", submission.status);
     addMeta(meta, "Email", submission.artist_email);
     addMeta(meta, "Credit", getCreditLine(submission));
+    addMeta(meta, "Paper confirmed", submission.paper_confirmed ? "Yes" : "No");
+    addMeta(meta, "Method", getMethodLine(submission));
     addMeta(meta, "Social", submission.social);
     addMeta(meta, "Website", submission.website);
     addMeta(meta, "Location", submission.location);
@@ -187,7 +189,8 @@
       createActionButton(submission.featured ? "Unfeature" : "Feature", () =>
         updateSubmission(submission.id, { featured: !submission.featured, status: "approved" })
       ),
-      createActionButton("Save notes", () => updateSubmission(submission.id, { admin_notes: notesInput.value }))
+      createActionButton("Save notes", () => updateSubmission(submission.id, { admin_notes: notesInput.value })),
+      createActionButton("Delete", () => deleteSubmission(submission), "danger-button")
     );
 
     body.append(title, meta, notes, adminNotes, actions);
@@ -219,9 +222,43 @@
     await loadSubmissions();
   }
 
-  function createActionButton(label, onClick) {
+  async function deleteSubmission(submission) {
+    const confirmed = window.confirm(
+      "Delete this submission permanently? This removes the review record and stored image. This cannot be undone."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setAdminStatus("Deleting submission...", "");
+
+    const storageResult = await supabase.storage.from(communityCanvas.getBucketName()).remove([submission.image_path]);
+
+    if (storageResult.error) {
+      console.error(storageResult.error);
+      setAdminStatus("Could not delete the stored image. The submission was not deleted.", "error");
+      return;
+    }
+
+    const deleteResult = await supabase
+      .from("community_canvas_submissions")
+      .delete()
+      .eq("id", submission.id);
+
+    if (deleteResult.error) {
+      console.error(deleteResult.error);
+      setAdminStatus("Could not delete that submission.", "error");
+      return;
+    }
+
+    setAdminStatus("Submission deleted.", "success");
+    await loadSubmissions();
+  }
+
+  function createActionButton(label, onClick, extraClass) {
     const button = document.createElement("button");
-    button.className = "button ghost-button";
+    button.className = "button ghost-button" + (extraClass ? " " + extraClass : "");
     button.type = "button";
     button.textContent = label;
     button.addEventListener("click", onClick);
@@ -258,6 +295,25 @@
     }
 
     return submission.artist_name || "Public credit selected, no artist name shared";
+  }
+
+  function getMethodLine(submission) {
+    const methods = Array.isArray(submission.artwork_methods) ? submission.artwork_methods : [];
+    const labels = methods.map(formatMethodLabel);
+
+    if (submission.artwork_method_other) {
+      labels.push("Other: " + submission.artwork_method_other);
+    }
+
+    return labels.join(", ");
+  }
+
+  function formatMethodLabel(value) {
+    if (value === "mixed-media") {
+      return "Mixed media";
+    }
+
+    return capitalize(value);
   }
 
   function getAuthErrorMessage(error) {
