@@ -35,7 +35,6 @@
     }
 
     bindEvents();
-    elements.adminEmailInput.value = communityCanvas.config.adminEmail || "";
 
     const sessionResult = await supabase.auth.getSession();
     session = sessionResult.data && sessionResult.data.session ? sessionResult.data.session : null;
