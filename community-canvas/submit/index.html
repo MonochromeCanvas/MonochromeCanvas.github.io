@@ -78,9 +78,48 @@
                   <span>Publish the artist info I share below</span>
                 </label>
               </fieldset>
+
+              <fieldset class="choice-group">
+                <legend>Recycled paper confirmation</legend>
+                <label>
+                  <input id="paperConfirmInput" name="paperConfirmed" type="checkbox" required>
+                  <span>
+                    I confirm this artwork was made using the Monochrome Canvas recycled studio paper
+                    in some way. Submissions that are not connected to the paper will not be accepted.
+                  </span>
+                </label>
+              </fieldset>
             </div>
 
             <div class="form-column">
+              <fieldset class="choice-group">
+                <legend>How was the paper used?</legend>
+                <label>
+                  <input type="checkbox" name="artworkMethod" value="drawing">
+                  <span>Drawing</span>
+                </label>
+                <label>
+                  <input type="checkbox" name="artworkMethod" value="painting">
+                  <span>Painting</span>
+                </label>
+                <label>
+                  <input type="checkbox" name="artworkMethod" value="collage">
+                  <span>Collage</span>
+                </label>
+                <label>
+                  <input type="checkbox" name="artworkMethod" value="mixed-media">
+                  <span>Mixed media</span>
+                </label>
+                <label>
+                  <input type="checkbox" name="artworkMethod" value="other">
+                  <span>Other</span>
+                </label>
+                <label class="field other-method-field">
+                  <span>Other use <em>required if selected</em></span>
+                  <input id="otherMethodInput" name="artworkMethodOther" type="text" maxlength="140" placeholder="Tell us how the paper was used">
+                </label>
+              </fieldset>
+
               <label class="field">
                 <span>Artwork title <em>optional</em></span>
                 <input id="titleInput" name="title" type="text" maxlength="80" placeholder="Untitled">
@@ -146,8 +185,8 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../config.js?v=20260624-connected"></script>
-    <script src="../supabase-client.js?v=20260624-connected"></script>
-    <script src="../submit.js?v=20260624-connected"></script>
+    <script src="../config.js?v=20260624-paper-methods"></script>
+    <script src="../supabase-client.js?v=20260624-paper-methods"></script>
+    <script src="../submit.js?v=20260624-paper-methods"></script>
   </body>
 </html>
