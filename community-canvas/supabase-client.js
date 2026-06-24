@@ -1,6 +1,6 @@
 (function () {
   const config = window.COMMUNITY_CANVAS_CONFIG || {};
-  const PLACEHOLDER_PATTERN = /^(|YOUR_|https:\/\/YOUR-|your-)/i;
+  const PLACEHOLDER_PATTERN = /^(YOUR_|https:\/\/YOUR-|your-)/i;
   let client = null;
 
   function isConfigured() {
