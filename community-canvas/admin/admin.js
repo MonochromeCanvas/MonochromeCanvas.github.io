@@ -18,6 +18,7 @@
 
   let supabase = null;
   let session = null;
+  let submissionsRequestId = 0;
 
   init();
 
@@ -115,6 +116,7 @@
   }
 
   async function loadSubmissions() {
+    const requestId = ++submissionsRequestId;
     const status = elements.statusFilter.value;
     setAdminStatus("Loading submissions...", "");
     elements.submissionList.replaceChildren();
@@ -131,6 +133,10 @@
 
     const { data, error } = await query;
 
+    if (requestId !== submissionsRequestId) {
+      return;
+    }
+
     if (error) {
       console.error(error);
       setAdminStatus("Could not load submissions. Check the SQL policies and admin email.", "error");
@@ -139,7 +145,7 @@
 
     const submissions = Array.isArray(data) ? data : [];
     setAdminStatus(submissions.length ? "" : "No submissions in this view yet.", "");
-    submissions.forEach((submission) => elements.submissionList.appendChild(createSubmissionCard(submission)));
+    elements.submissionList.replaceChildren(...submissions.map(createSubmissionCard));
   }
 
   function createSubmissionCard(submission) {
