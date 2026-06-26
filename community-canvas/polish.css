@@ -63,6 +63,7 @@ h2,
   background: transparent;
 }
 
+.about-story a,
 .faq-section a {
   color: var(--ink);
   font-weight: 800;
