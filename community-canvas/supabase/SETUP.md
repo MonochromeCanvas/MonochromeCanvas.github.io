@@ -20,8 +20,6 @@ window.COMMUNITY_CANVAS_CONFIG = {
 };
 ```
 
-The anon public key is designed to be visible in browser code. The database rules in the SQL file control what visitors and admins can actually do.
-
 ## 2. Install the database/storage setup
 
 In Supabase, open SQL Editor and run:
@@ -77,3 +75,11 @@ You sign in by email link. Only emails listed in `community_canvas_admins` can s
 Pending submissions do not appear in the public gallery. They only appear after an admin clicks Approve.
 
 The storage bucket is public so approved images can render on GitHub Pages without a server. Pending images are not linked publicly, but their unguessable storage paths are technically public if someone has the exact URL. For a stricter version, use a private pending bucket plus an Edge Function to move approved images into a public bucket.
+
+## Optional: Email notifications
+
+Use `supabase/EMAIL_NOTIFICATIONS.md` to enable email alerts when a new pending submission is created. The project includes a Supabase Edge Function at:
+
+`supabase/functions/community-canvas-notify/index.ts`
+
+The recommended setup is Supabase Database Webhook -> Edge Function -> Resend email.
